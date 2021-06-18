@@ -8,13 +8,13 @@
 
 package org.csource.fastdfs;
 
-import org.csource.common.MyException;
-import org.csource.fastdfs.pool.Connection;
-import org.csource.fastdfs.pool.ConnectionPool;
-import org.csource.fastdfs.pool.ConnectionFactory;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
+
+import org.csource.common.MyException;
+import org.csource.fastdfs.pool.Connection;
+import org.csource.fastdfs.pool.ConnectionFactory;
+import org.csource.fastdfs.pool.ConnectionPool;
 
 /**
  * Tracker Server Info
@@ -27,7 +27,18 @@ public class TrackerServer {
 
 
     public TrackerServer(InetSocketAddress inetSockAddr) throws IOException {
-        this.inetSockAddr = inetSockAddr;
+        final String key = inetSockAddr.getHostName() + ":" + inetSockAddr.getPort();
+        if (ClientGlobal.address_mapping.containsKey(key)) {
+            final String v = ClientGlobal.address_mapping.get(key);
+            String[] s = v.split(":");
+            if (s.length > 1) {
+                this.inetSockAddr = new InetSocketAddress(s[0], Integer.parseInt(s[1]));
+            } else {
+                throw new IOException("config error: " + key + "=" + v);
+            }
+        } else {
+            this.inetSockAddr = inetSockAddr;
+        }
     }
 
     public Connection getConnection() throws MyException, IOException {
@@ -39,6 +50,7 @@ public class TrackerServer {
         }
         return connection;
     }
+
     /**
      * get the server info
      *
